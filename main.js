@@ -114,17 +114,23 @@ const pMaterial = new THREE.ShaderMaterial({
         }
     `, //
     fragmentShader: `
-        uniform sampler2D uTexture;
-        varying vec3 vColor;
-        void main() {
-            vec4 texColor = texture2D(uTexture, gl_PointCoord);
-            if (texColor.a < 0.02) discard;
-            gl_FragColor = vec4(vColor * texColor.rgb, texColor.a);
-        }
-    `, //
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    transparent: true
+    uniform sampler2D uTexture;
+    varying vec3 vColor;
+    void main() {
+      // 1. Fetch texture data safely using standard UV point coordinates
+      vec4 texColor = texture2D(uTexture, gl_PointCoord);
+      
+      // 2. 🌟 FIX: Replace the fragile 'discard' branch with hard mathematical alpha step.
+      // This prevents the production compiler from misinterpreting alpha threshold optimizations.
+      float alphaMask = step(0.02, texColor.a) * texColor.a;
+      
+      // 3. Output the absolute multiplied value directly into the blending buffer
+      gl_FragColor = vec4(vColor * texColor.rgb, alphaMask);
+    }
+  `,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  transparent: true
 });
 
 const mainParticleSystem = new THREE.Points(pGeometry, pMaterial);
@@ -402,9 +408,9 @@ function animate() {
     }
   }
   
-  pGeometry.getAttribute('position').needsUpdate = true;
-  pGeometry.getAttribute('color').needsUpdate = true;
-  pGeometry.getAttribute('size').needsUpdate = true;
+  pGeometry.attributes.position.needsUpdate = true;
+  pGeometry.attributes.color.needsUpdate = true;
+  pGeometry.attributes.size.needsUpdate = true;
   pGeometry.setDrawRange(0, liveCounter); 
   
   controls.update();
