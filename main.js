@@ -12,7 +12,7 @@ camera.position.set(0, 3, 16); //
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
 renderer.toneMapping = THREE.ACESFilmicToneMapping; 
 renderer.toneMappingExposure = 1.4; //
 document.body.appendChild(renderer.domElement);
@@ -57,9 +57,14 @@ const generateParticleTexture = () => {
     grad.addColorStop(0.55, 'rgba(200,50,10,0.25)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
+   
     return new THREE.CanvasTexture(canvas);
 };
-const flameTexture = generateParticleTexture(); //
+const flameTexture = generateParticleTexture(); 
+
+// 🌟 2. ADD THESE TWO LINES DIRECTLY HERE:
+flameTexture.minFilter = THREE.LinearFilter;
+flameTexture.magFilter = THREE.LinearFilter;
 
 // --- 5. High-Density Particle Engine Configuration ---
 const MAX_PARTICLES = 7000; 
@@ -422,6 +427,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
+  bloomPass.setSize(window.innerWidth, window.innerHeight);
 }); 
 // ====== 2. 彻底修复：点击按钮强制解锁并发射 ======
 document.getElementById('launch-btn').addEventListener('click', () => {
